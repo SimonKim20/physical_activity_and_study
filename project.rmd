@@ -1,0 +1,309 @@
+---
+title: "Investigating the Relationship between Physical Activity and an Individual's Study Habits"
+author: "Simon Kim"
+output:
+  html_document:
+    fig_caption: yes
+    number_sections: yes
+    self_contained: yes
+    theme: flatly
+    toc: true
+    toc_depth: 3
+    toc_float: true
+    code_folding: hide
+---
+
+<br>
+
+# Executive Summary
+
+This report aims to investigate how physical activity impacts study habits.
+
+Key findings:
+
+- The more time spent performing physical activity, the longer respondents were able to undergo focused study.
+
+- The way individuals perform physical activity has strong impacts on how energised they were before study.
+
+
+<br>
+
+# Full Report
+
+## Initial Data Analysis (IDA)
+
+### Source
+
+Data was collected using (Google Forms)[<https://docs.google.com/forms/d/e/1FAIpQLSdoKyCJjY2eqYijesKuMEWtXnKf2gN7jZkD40PZ7peMhT8kPw/viewform>]
+
+```{r, message=F}
+
+data <- read.csv("data.csv")
+
+# loading packages
+
+library(dplyr)
+library(plotly)
+
+# show unclean data
+str(data)
+
+```
+
+
+### Data Cleaning
+
+```{r}
+# incorrect data
+data$X <- NULL
+
+# rename variables for ease of use
+data <- rename(data, "physical_activity_status" = "X1..Do.you.partake.in.physical.activity.")
+data <- rename(data, "physical_activity_days_per_week" = "X2..How.many.days.per.week.do.you.partake.in.physical.activity.")
+data <- rename(data, "physical_activity_hours_per_week" = "X3..How.many.hours.of.physical.activity.do.you.partake.in.each.week.")
+data <- rename(data, "intensity" = "X4..How.would.you.describe.the.intensity.of.your.physical.activity.")
+data <- rename(data, "type" = "X5..What.type.of.physical.activity.do.you.partake.in.")
+data <- rename(data, "study_before_after" = "X6..Do.you.tend.to.study.before.or.after.physical.activity.")
+data <- rename(data, "energised_refreshed_status" = "X7..Do.you.generally.feel.energised.and.refreshed.before.study.")
+data <- rename(data, "study_hours_per_week" = "X8..How.many.hours.of.study.do.you.undergo.per.week.")
+data <- rename(data, "focused_study" = "X9..How.many.hours.of.focused.study.can.you.undergo.in.one.sitting.")
+
+# chr -> factor for ease of use
+data$physical_activity_status <- as.factor(data$physical_activity_status)
+data$intensity <- as.factor(data$intensity)
+data$type <- as.factor(data$type)
+data$study_before_after <- as.factor(data$study_before_after)
+data$energised_refreshed_status <- as.factor(data$energised_refreshed_status)
+data$focused_study <- as.factor(data$focused_study)
+
+# show cleaned data
+str(data)
+
+```
+
+
+### Structure
+
+Using the survey, qualitative and quantitative data was collected through the use of multiple-choice and short-answer questions. There are 9 variables and 37 survey responses.
+
+
+### Limitations
+
+-   Selection bias: The majority of respondents are students at USYD, and many show different survey responses to those who are not university students in USYD.
+
+-   Consent Bias: The mode of data collection (survey) inherently introduces consent bias because it gives respondents the choice on whether or not to participate.
+
+
+### Assumptions
+
+-   This study assumes that respondents partake in some amount of study.
+
+
+<br>
+
+
+## Research Question(s)
+
+### Research Question 1
+
+> Does the amount of time spent training influence the amount and quality of study?
+
+```{r, message=F}
+
+# physical_activity_days_per_week vs frequency barplot
+plot1 <- ggplot(data=data,
+                aes(x=physical_activity_days_per_week)) +
+          geom_bar() +
+          xlab("Number of days per week physical activity is done") +
+          ylab("Frequency") +
+          theme_bw() +
+          scale_x_continuous(breaks=c(1, 2, 3, 4, 5, 6, 7))
+
+
+# physical_activity_hours_per_week vs study_hours_per_week on scatter 
+plot2 <- ggplot(data=data,
+                  aes(x=physical_activity_hours_per_week,
+                      y=study_hours_per_week)) +
+            geom_point() +
+            xlab("Number of hours per week physical activity is done") +
+            ylab("Number of hours per week study is done") +
+            theme_bw() +
+            geom_smooth(method="lm")
+
+cor(data$physical_activity_hours_per_week, data$study_hours_per_week)
+          
+
+# physical_activity_days_per_week vs study_hours_per_week on scatter
+plot3 <- ggplot(data=data,
+                  aes(x=physical_activity_days_per_week,
+                      y=study_hours_per_week)) +
+            geom_point() +
+            xlab("Number of days per week physical activity is done") +
+            ylab("Number of hours per week study is done") +
+            theme_bw() +
+            geom_smooth(method="lm")
+
+cor(data$physical_activity_days_per_week, data$study_hours_per_week)
+
+
+# physical_activity_days_per_week vs focused_study barplot
+plot4 <- ggplot(data=data,
+                aes(x=physical_activity_days_per_week,
+                    fill=focused_study)) +
+          geom_bar() +
+          xlab("Number of days per week physical activity is done") +
+          ylab("Frequency") +
+          theme_bw() +
+          scale_x_continuous(breaks=c(1, 2, 3, 4, 5, 6, 7))
+
+
+# focused_study vs physical_activity_hours_per_week barplot
+plot5 <- ggplot(data=data,
+                  aes(x=focused_study,
+                      y=physical_activity_hours_per_week)) +
+            geom_boxplot() +
+            xlab("Number of hours of focused study completed in one sitting") +
+            ylab("Number of hours per week physical activity is done") +
+            theme_bw() +
+            scale_x_discrete(limits=c("< 1 hours", "1-2 hours", "2-3 hours", "3-4 hours", "> 4 hours"))
+
+
+
+plotly::ggplotly(plot1)
+plotly::ggplotly(plot2)
+plotly::ggplotly(plot3)
+plotly::ggplotly(plot4)
+plotly::ggplotly(plot5)
+
+```
+
+<br>
+
+#### Analysis and Summary
+
+- Respondents who performed physical activity a greater number of hours per week spent fewer hours per week studying (plot2). This trend was reflected when observing how many days per week physical activity was performed (plot3). A possible explanation for this could be the time commitment of physical activity, but it is difficult to be certain without further investigation.
+
+- However, respondents who performed physical activity a greater number of days per week were able to undergo longer periods of focused study in one sitting compared to respondents who performed physical activity a fewer number of days per week (plot4). This trend was reflected when observing how many hours per week of physical activity were performed (plot5). Research shows a strong correlation between physical activity and concentration.
+
+- Overall, there was an inverse effect when observing how the number of days per week physical activity is performed impacts; the number of hours per week study, and the number of hours of focused study in one sitting.
+
+<br>
+
+#### Linear Modelling
+
+```{r, message=F}
+
+model <- lm(data$study_hours_per_week ~ data$physical_activity_hours_per_week)
+
+summary(model)
+
+```
+
+```{r, message=F}
+
+residual_plot <- ggplot(data=model,
+                        aes(x=.fitted,
+                            y=.resid)) +
+                  geom_point() +
+                  geom_hline(yintercept=0, linetype="dashed", colour="red") +
+                  ggtitle("Residual Plot") +
+                  xlab("Time spent studying per week (hours)") +
+                  ylab("Residuals") +
+                  theme_bw()
+
+
+plotly::ggplotly(residual_plot)
+
+```
+
+##### Analysis
+
+- Due to the heteroscedasticity of the residual plot, it would not be appropriate to observe and analyse it.
+
+<br>
+
+### Research Question 2
+
+> How does the way an individual trains influence how refreshed they are before study?
+
+#### Type of Physical Activity
+
+```{r}
+
+# type barplot with evergised_refreshed_status fill
+plot6 <- ggplot(data=data,
+                aes(x=type,
+                    fill=energised_refreshed_status)) +
+          geom_bar() +
+          xlab("Type of physical Activity") +
+          ylab("Frequency") +
+          theme_bw()
+
+
+plotly::ggplotly(plot6) # more useful plot 
+
+```
+
+
+##### Analysis
+
+- Respondents who performed physical activity of the types: resistance training or flexibility training were more energetic before study. 
+
+- Respondents who performed physical activity of the type: incidental activity were less energetic before study.
+
+- Respondents who performed physical activity of the type: cardiovascular training showed minimal impact on how energetic they were before study.
+
+<br>
+
+#### Intensity of Physical Activity
+
+```{r}
+
+# intensity barplot with energised_refreshed_status fill
+plot7 <- ggplot(data=data,
+                  aes(x=intensity,
+                      fill=energised_refreshed_status)) +
+            geom_bar() +
+            xlab("Intensity of physical activity") +
+            ylab("Frequeny") +
+            theme_bw() +
+            scale_x_discrete(limits=c("Low intensity", "Moderate intensity", "High intensity", "High performance athlete intensity"))
+
+
+plotly::ggplotly(plot7)
+
+```
+
+
+##### Analysis and Summary
+
+- The higher the intensity of physical activity, the more energetic respondents were before study.
+
+- A limitation is that there is less data on respondents who performed physical activity at a high performance athlete intensity - this can be partially explained due to the fact that there are less people who train at such a high level compared to people who train at a lower intensity. Thus, it is difficult to provide  trends when observing respondents who perform at a high performance athlete intensity.
+
+- Overall, respondents who performed physical activity at higher intensities showed higher levels of energy before study, but further investigation is required.
+
+<br>
+
+#### Study Before or After Physical Activity
+
+```{r, message=F}
+
+# study_before_after barplot with energised_refreshed_status fill
+plot8 <- ggplot(data=data,
+                aes(x=study_before_after,
+                    fill=energised_refreshed_status)) +
+          geom_bar() +
+          xlab("Study before or after physical activtiy") +
+          ylab("Frequency") +
+          theme_bw()
+
+
+plotly::ggplotly(plot8)
+
+```
+
+
+##### Analysis and Summary
+
+- Studying before or after physical activity has little impact on how refreshed and energetic respondents were before studying.
